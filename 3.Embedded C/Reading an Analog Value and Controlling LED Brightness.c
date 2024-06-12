@@ -1,5 +1,12 @@
-#include <avr/io.h>
-#include <util/delay.h>
+Objectives:
+- The objective of this code is to read an analog input from ADC channel 0, convert the obtained value into an 8-bit PWM value, and use this PWM value to control the brightness of an LED connected to pin PD6 (Arduino pin 6).
+- `ADC_Init()` function initializes the ADC to use AVcc as the reference voltage, set the ADC clock frequency to 125kHz, and enable the ADC.
+- `ADC_Read()` function reads the analog value from the specified ADC channel (in this case, channel 0) and returns the result.
+- `PWM_Init()` function initializes Timer 0 to generate PWM with non-inverting output mode on pin PD6 (OC0A).
+- Inside the `main()` function, there's an infinite loop that reads the analog value from ADC channel 0, maps it to an 8-bit PWM value, sets the PWM duty cycle accordingly, and introduces a small delay for stabilization and debounce purposes.
+
+#include <avr/io.h>        // Include AVR I/O definitions
+#include <util/delay.h>    // Include delay functions
 
 void ADC_Init() {
     // Set the reference voltage to AVcc (5V)
@@ -34,7 +41,7 @@ void PWM_Init() {
     // Set prescaler to 64 and start the timer
     TCCR0B = (1 << CS01) | (1 << CS00);
 
-    // Set PB1 (Arduino pin 9) as output (OC1A)
+    // Set PD6 (OC0A) as output
     DDRD |= (1 << PD6);
 }
 
@@ -46,17 +53,19 @@ int main() {
     uint16_t adc_result;
     uint8_t pwm_value;
     
-    ADC_Init();
-    PWM_Init();
+    ADC_Init();  // Initialize ADC
+    PWM_Init();  // Initialize PWM
 
     while (1) {
         adc_result = ADC_Read(0); // Read from ADC channel 0
 
         // Map the 10-bit ADC value to an 8-bit PWM value
-        pwm_value = adc_result >> 2; // Dividing by 4 to fit 10-bit value into 8-bit
+        pwm_value = adc_result >> 2; // Divide by 4 to fit 10-bit value into 8-bit
 
         set_PWM(pwm_value); // Set the PWM duty cycle
 
         _delay_ms(100); // Small delay to debounce and stabilize reading
     }
 }
+
+
